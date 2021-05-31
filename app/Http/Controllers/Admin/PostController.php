@@ -79,9 +79,9 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Post $post)
     {
-         return view('admin.posts.show', compact('post'));
+         return view('admin.post.show', compact('post'));
     }
 
     /**
@@ -90,9 +90,11 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Post $post)
     {
-        //
+        // $tags = Tag::all();
+
+        return view('admin.post.edit', compact('post', 'tags'));
     }
 
     /**
@@ -102,9 +104,32 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Post $post)
     {
-        //
+        $validation = $this->validation;
+        $validation['title'] = 'required|string|max:255|unique:posts,title,' . $post->id;
+
+        // validation
+        $request->validate($validation);
+
+        $data = $request->all();
+        
+        // controllo checkbox
+        $data['published'] = !isset($data['published']) ? 0 : 1;
+        // imposto lo slug partendo dal title
+        $data['slug'] = Str::slug($data['title'], '-');
+
+        // Update
+        $post->update($data);
+
+        // aggiorno i tags
+        if( !isset($data['tags']) ) {
+            $data['tags'] = [];
+        }
+        $post->tags()->sync($data['tags']);
+
+        // return
+        return redirect()->route('admin.posts.show', $post);
     }
 
     /**
