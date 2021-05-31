@@ -1,12 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\admin;
-
+namespace App\Http\Controllers\Admin;
+use App\Post;
+use App\Tag;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
-class \PostsController extends Controller
+
+class PostController extends Controller
 {
+
+    protected $validation = [
+        'date' => 'required|date',
+        'content' => 'required|string',
+        'image' => 'nullable|url'
+    ];
+    
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +24,9 @@ class \PostsController extends Controller
      */
     public function index()
     {
-        //
+        $posts = Post::all();
+        
+        return view('admin.post.index', compact('posts'));
     }
 
     /**
@@ -24,7 +36,7 @@ class \PostsController extends Controller
      */
     public function create()
     {
-        return view('admin.post.create')
+        return view('admin.post.create');
     }
 
     /**
@@ -35,7 +47,30 @@ class \PostsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validation = $this->validation;
+        $validation['title'] = 'required|string|max:255|unique:posts';
+        
+        // validation
+        $request->validate($validation);
+
+        $data = $request->all();
+        
+        // controllo checkbox
+        $data['published'] = !isset($data['published']) ? 0 : 1;
+        // imposto lo slug partendo dal title
+        $data['slug'] = Str::slug($data['title'], '-');
+
+        // Insert
+        $newPost = Post::create($data);    
+        
+        // aggiungo i tags
+        if( isset($data['tags']) ) {
+            $newPost->tags()->attach($data['tags']);
+        }
+
+        // redirect
+        return redirect()->route('admin.posts.index');
+
     }
 
     /**
