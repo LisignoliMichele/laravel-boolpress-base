@@ -16,7 +16,7 @@ class PostController extends Controller
         'content' => 'required|string',
         'image' => 'nullable|url'
     ];
-    
+
     /**
      * Display a listing of the resource.
      *
@@ -81,7 +81,7 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        //
+         return view('admin.posts.show', compact('post'));
     }
 
     /**
